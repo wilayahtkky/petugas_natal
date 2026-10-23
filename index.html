@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jadwal Tugas Adven Katedral 2026</title>
+  <title>Jadwal Tugas Minggu Adven Katedral 2026</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans">
@@ -113,4 +113,133 @@
     }
 
     function handleSearch() {
-      searchQuery = document.
+      searchQuery = document.getElementById('searchInput').value.toLowerCase();
+      renderCards();
+    }
+
+    function toggleAccordion(index) {
+      const content = document.getElementById('content-' + index);
+      const icon = document.getElementById('icon-' + index);
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        icon.style.transform = 'rotate(180deg)';
+      } else {
+        content.classList.add('hidden');
+        icon.style.transform = 'rotate(0deg)';
+      }
+    }
+
+    function renderCards() {
+      const container = document.getElementById('cards-container');
+      container.innerHTML = '';
+
+      // Filter by Event
+      let records = db[activeTab].filter(item => (item.Event || "").toString().trim() === activeEvent);
+
+      // Filter by Search Query
+      if (searchQuery) {
+        records = records.filter(item => {
+          const rowData = Object.values(item).join(' ').toLowerCase();
+          return rowData.includes(searchQuery);
+        });
+      }
+
+      if (records.length === 0) {
+        container.innerHTML = `<p class="text-center text-gray-500 mt-10">Tidak ada data ditemukan.</p>`;
+        return;
+      }
+
+      // Sort records chronologically (Tanggal -> Jam)
+      records.sort((a, b) => {
+        let dtA = new Date((a.Tanggal || "") + " " + (a.jam || "00:00"));
+        let dtB = new Date((b.Tanggal || "") + " " + (b.jam || "00:00"));
+        if (!isNaN(dtA) && !isNaN(dtB)) {
+          return dtA - dtB;
+        } else {
+          let strA = (a.Tanggal || "") + " " + (a.jam || "");
+          let strB = (b.Tanggal || "") + " " + (b.jam || "");
+          return strA.localeCompare(strB);
+        }
+      });
+
+      // Group records by Date (Tanggal) first, then Time (jam)
+      const groupedData = {};
+      records.forEach(item => {
+        const dateKey = item.Tanggal || 'Tanggal Tidak Ditetapkan';
+        const timeKey = item.jam || 'Waktu Tidak Ditetapkan';
+        
+        if (!groupedData[dateKey]) groupedData[dateKey] = {};
+        if (!groupedData[dateKey][timeKey]) groupedData[dateKey][timeKey] = [];
+        
+        groupedData[dateKey][timeKey].push(item);
+      });
+
+      let html = '';
+      let accordionIndex = 0;
+
+      // Render grouped data
+      for (const [dateKey, timeGroups] of Object.entries(groupedData)) {
+        
+        // Render Date Divider
+        html += `
+          <div class="flex items-center my-6">
+            <div class="flex-grow border-t-2 border-red-200"></div>
+            <span class="mx-4 font-bold text-red-800 bg-red-100 px-4 py-1.5 rounded-full shadow-sm text-sm tracking-wide">
+              🗓️ ${dateKey}
+            </span>
+            <div class="flex-grow border-t-2 border-red-200"></div>
+          </div>
+        `;
+
+        // Render Time Blocks within the Date
+        for (const [timeKey, items] of Object.entries(timeGroups)) {
+          html += `
+            <div class="border-2 border-red-600 rounded-xl overflow-hidden bg-white shadow-sm mb-4">
+              <button onclick="toggleAccordion(${accordionIndex})" class="w-full flex justify-between items-center p-4 bg-green-50 hover:bg-green-100 transition-colors focus:outline-none">
+                <div class="flex items-center gap-3">
+                  <span class="bg-green-700 text-white px-3 py-1 rounded-md font-bold text-sm tracking-wide shadow-sm flex items-center gap-1">
+                    ⏰ ${timeKey}
+                  </span>
+                  <span class="text-sm font-bold text-red-700">${items.length} Petugas</span>
+                </div>
+                <svg id="icon-${accordionIndex}" class="w-5 h-5 text-red-700 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+              <div id="content-${accordionIndex}" class="hidden p-4 space-y-3 bg-red-50 border-t-2 border-red-200">
+          `;
+
+          items.forEach(item => {
+            let title, details, person;
+            
+            if (activeTab === 'perarakan') {
+              title = `${item.wilayah || ''} ${item.lingkungan ? '- ' + item.lingkungan : ''}`;
+              details = `Tugas: Perarakan Korona`;
+              person = `Petugas: <span class="font-bold text-gray-900">${item['Nama petugas'] || '-'}</span>`;
+            } else {
+              title = item['Asal Petugas'] || item.Wilayah || item.kategorial || '-';
+              details = `${item.Lingkungan ? `Lingkungan: ${item.Lingkungan}` : 'Tugas: Penyalaan Lilin'}`;
+              person = `Suami & Istri: <span class="font-bold text-gray-900">${item['Nama Suami'] || '-'} & ${item['Nama Istri'] || '-'}</span>`;
+            }
+
+            html += `
+              <div class="bg-white border border-red-300 rounded-lg p-3 shadow-sm relative border-l-4 border-l-green-600">
+                <h3 class="font-bold text-md leading-tight text-gray-800">${title}</h3>
+                <p class="text-sm text-gray-600 mt-2 mb-2">${details}</p>
+                <div class="pt-2 border-t border-gray-100 text-sm text-gray-700">
+                  ${person}
+                </div>
+              </div>
+            `;
+          });
+
+          html += `</div></div>`;
+          accordionIndex++;
+        }
+      }
+
+      container.innerHTML = html;
+    }
+  </script>
+</body>
+</html>
