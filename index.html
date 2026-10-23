@@ -1,68 +1,116 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rekap Jadwal</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #f4f6f8; }
-        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: inline-block; }
-        button {
-            background-color: #1a73e8; color: white; padding: 15px 32px;
-            text-align: center; font-size: 16px; font-weight: bold; margin: 20px 0;
-            cursor: pointer; border: none; border-radius: 4px; transition: 0.3s;
-        }
-        button:hover { background-color: #1557b0; }
-        button:disabled { background-color: #cccccc; cursor: not-allowed; }
-        #status { margin-top: 15px; font-weight: bold; font-size: 14px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jadwal Tugas Adven Katedral 2026</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-gray-100 text-gray-800 font-sans">
 
-    <div class="container">
-        <h2>Rekap Jadwal</h2>
-        <button id="btnGetData" onclick="getData()">GET DATA</button>
-        <div id="status">Ready to fetch data...</div>
+  <!-- Container utama dengan Flexbox agar footer bisa ditaruh di paling bawah -->
+  <div class="max-w-md mx-auto bg-white min-h-screen shadow-lg flex flex-col">
+    
+    <!-- WRAPPER STICKY: Bagian ini akan menempel di atas dan tidak ikut di-scroll -->
+    <div class="sticky top-0 z-20 bg-white shadow-md">
+      
+      <!-- Header & Event Filters -->
+      <div class="bg-red-700 text-white p-4 border-b-4 border-green-600">
+        <h1 class="text-xl font-bold text-center mb-4 tracking-wide">Jadwal Tugas Adven Katedral 2026</h1>
+        <div class="flex justify-between gap-2 overflow-x-auto pb-2">
+          <button onclick="setEvent('Adven I')" id="btn-Adven I" class="event-btn flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-green-700 border-2 border-white shadow-md transition">Adven I</button>
+          <button onclick="setEvent('Adven II')" id="btn-Adven II" class="event-btn flex-1 py-2 px-3 rounded-lg text-sm font-semibold bg-green-500 border-2 border-transparent hover:bg-green-600 transition">Adven II</button>
+          <button onclick="setEvent('Adven III')" id="btn-Adven III" class="event-btn flex-1 py-2 px-3 rounded-lg text-sm font-semibold bg-green-500 border-2 border-transparent hover:bg-green-600 transition">Adven III</button>
+          <button onclick="setEvent('Adven IV')" id="btn-Adven IV" class="event-btn flex-1 py-2 px-3 rounded-lg text-sm font-semibold bg-green-500 border-2 border-transparent hover:bg-green-600 transition">Adven IV</button>
+        </div>
+      </div>
+
+      <!-- Category Tabs -->
+      <div class="flex border-b-2 border-red-200">
+        <button onclick="setTab('perarakan')" id="tab-perarakan" class="flex-1 py-3 text-center font-bold text-red-700 border-b-4 border-red-700 transition">Perarakan Korona</button>
+        <button onclick="setTab('penyalaan')" id="tab-penyalaan" class="flex-1 py-3 text-center font-semibold text-gray-400 border-b-4 border-transparent transition">Penyalaan Lilin</button>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="p-4 bg-gray-50 border-b border-red-100">
+        <div class="relative">
+          <input 
+            type="text" 
+            id="searchInput" 
+            oninput="handleSearch()" 
+            placeholder="Cari nama, lingkungan, atau wilayah..." 
+            class="w-full pl-10 pr-4 py-2 border-2 border-red-300 rounded-lg focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition"
+          >
+          <svg class="w-5 h-5 text-red-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+      </div>
+
+    </div>
+    <!-- AKHIR WRAPPER STICKY -->
+
+    <!-- Area Konten Utama (Dapat di-scroll) -->
+    <div class="flex-grow">
+      <!-- Loading State -->
+      <div id="loading" class="text-center p-8 text-red-600 font-semibold animate-pulse">Memuat data jadwal...</div>
+
+      <!-- Content Cards (Time Blocks) -->
+      <div id="cards-container" class="p-4"></div>
     </div>
 
-    <script>
-        // Replace this with your generated Google Apps Script Web App URL
-        const WEB_APP_URL = "YOUR_WEB_APP_URL_HERE";
+    <!-- Footer -->
+    <footer class="bg-green-800 text-white text-center p-4 text-xs font-semibold mt-auto shadow-inner">
+      Panitia Natal Katedral Jakarta - Wil Theresia dari Kanak-Kanak Yesus &copy; 2026
+    </footer>
 
-        function getData() {
-            const btn = document.getElementById("btnGetData");
-            const statusDiv = document.getElementById("status");
+  </div>
 
-            btn.disabled = true;
-            btn.innerText = "Processing...";
-            statusDiv.innerText = "Copying data from source sheets. Please wait...";
-            statusDiv.style.color = "#d93025";
+  <script>
+    // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
+    const API_URL = "https://script.google.com/macros/s/AKfycby2O6yPTfTEp6Pk3xGzqAn4OWjcfKd6kr5hudd61pS47A2yf7wxr4GRdLhHbB4N9_b-3g/exec"; 
+    
+    let db = { perarakan: [], penyalaan: [] };
+    let activeEvent = 'Adven I';
+    let activeTab = 'perarakan';
+    let searchQuery = '';
 
-            fetch(WEB_APP_URL)
-                .then(response => response.json())
-                .then(data => {
-                    if(data.status === "success") {
-                        statusDiv.innerText = "Rekap Selesai!";
-                        statusDiv.style.color = "#1e8e3e";
-                        
-                        // Alert popup exactly as requested
-                        alert("Done! The jobs have finished. Please check your Google Sheet directly to see if all data is correct.");
-                    } else {
-                        statusDiv.innerText = "Error: " + data.message;
-                        statusDiv.style.color = "red";
-                        alert("Failed: " + data.message);
-                    }
-                })
-                .catch(error => {
-                    statusDiv.innerText = "Network Error. Check console.";
-                    statusDiv.style.color = "red";
-                    alert("Network error. Make sure your Web App URL is correct.");
-                })
-                .finally(() => {
-                    btn.disabled = false;
-                    btn.innerText = "GET DATA";
-                });
-        }
-    </script>
-</body>
-</html>
+    window.onload = () => {
+      fetch(API_URL)
+        .then(res => res.json())
+        .then(data => {
+          db = data;
+          document.getElementById('loading').style.display = 'none';
+          renderCards();
+        })
+        .catch(err => {
+          document.getElementById('loading').innerText = "Gagal memuat data. Silakan coba lagi.";
+        });
+    };
+
+    function setEvent(eventName) {
+      activeEvent = eventName;
+      document.querySelectorAll('.event-btn').forEach(btn => {
+        btn.classList.remove('bg-green-700', 'border-white', 'font-bold', 'shadow-md');
+        btn.classList.add('bg-green-500', 'border-transparent', 'font-semibold');
+      });
+      const activeBtn = document.getElementById('btn-' + eventName);
+      activeBtn.classList.remove('bg-green-500', 'border-transparent', 'font-semibold');
+      activeBtn.classList.add('bg-green-700', 'border-white', 'font-bold', 'shadow-md');
+      renderCards();
+    }
+
+    function setTab(tabName) {
+      activeTab = tabName;
+      document.querySelectorAll('[id^="tab-"]').forEach(tab => {
+        tab.classList.remove('text-red-700', 'border-red-700', 'font-bold');
+        tab.classList.add('text-gray-400', 'border-transparent', 'font-semibold');
+      });
+      const activeElement = document.getElementById('tab-' + tabName);
+      activeElement.classList.remove('text-gray-400', 'border-transparent', 'font-semibold');
+      activeElement.classList.add('text-red-700', 'border-red-700', 'font-bold');
+      renderCards();
+    }
+
+    function handleSearch() {
+      searchQuery = document.

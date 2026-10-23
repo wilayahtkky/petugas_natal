@@ -1,0 +1,101 @@
+var ss = SpreadsheetApp.openById("1z7tix9arTTYxvQme83SV3J8Hw4blwBx7wG5iZPydiKk"); 
+
+// Code.gs
+
+function doGet(e) {
+  try {
+    var destSheetId = SpreadsheetApp.getActiveSpreadsheet().getId();
+    runRecap(destSheetId);
+    
+    return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Data successfully recapped!" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function runRecap(destSheetId) {
+  var targetSS = SpreadsheetApp.openById(destSheetId);
+
+  // ==========================================
+  // JOB 1: Pembawa Korona -> JadwalPerarakan
+  // ==========================================
+  var ssKorona = SpreadsheetApp.openById("1RCinkihYFuhQVzyxK70nNU0u-N4jocXraS5ulJ9PJJo");
+  var sheetKorona = ssKorona.getSheetByName("pembawakorona");
+  var dataKorona = sheetKorona.getDataRange().getValues();
+
+  var koronaMap = {};
+  for (var i = 1; i < dataKorona.length; i++) {
+    var lingkunganSource = dataKorona[i][4]; 
+    var nama = dataKorona[i][5];       
+    if (lingkunganSource) {
+      koronaMap[lingkunganSource.toString().trim().toLowerCase()] = nama;
+    }
+  }
+
+  var sheetJadwal = targetSS.getSheetByName("JadwalPerarakan");
+  var dataJadwal = sheetJadwal.getDataRange().getValues();
+
+  for (var j = 1; j < dataJadwal.length; j++) {
+    var currentLingkungan = dataJadwal[j][4]; 
+    if (currentLingkungan) {
+      var cleanCurLingkungan = currentLingkungan.toString().trim().toLowerCase();
+      if (koronaMap[cleanCurLingkungan]) {
+        var cellF = sheetJadwal.getRange(j + 1, 6); 
+        cellF.setValue(koronaMap[cleanCurLingkungan]);
+        cellF.setFontColor("blue"); // Changed to blue
+      }
+    }
+  }
+
+  // ==========================================
+  // JOB 2: Penyala Lilin -> JadwalPenyalaan
+  // ==========================================
+  var ssLilin = SpreadsheetApp.openById("1P9hJCC_kVG0JgLwtBRhOHVOgU3yT6ImtMS9Z5kV-rL0");
+  var sheetLilinSource = ssLilin.getSheetByName("penyalalilin");
+  var dataLilinSrc = sheetLilinSource.getDataRange().getValues();
+
+  var sheetLilinDest = targetSS.getSheetByName("JadwalPenyalaan");
+  var dataLilinDest = sheetLilinDest.getDataRange().getValues();
+
+  for (var k = 1; k < dataLilinSrc.length; k++) {
+    var wilayahSrc = dataLilinSrc[k][3];    // Source Col D (Index 3)
+    var lingkunganSrc = dataLilinSrc[k][4]; // Source Col E (Index 4)
+    var kategorialSrc = dataLilinSrc[k][5]; // Source Col F (Index 5)
+    var namaSuamiSrc = dataLilinSrc[k][6];  // Source Col G (Index 6)
+    var namaIstriSrc = dataLilinSrc[k][8];  // Source Col I (Index 8)
+
+    // Rule A: If Wilayah is not empty
+    if (wilayahSrc && wilayahSrc.toString().trim() !== "") {
+      var cleanWilayahSrc = wilayahSrc.toString().trim().toLowerCase();
+      
+      // Find matching Asal Petugas in Destination (Col H / Index 7)
+      for (var m = 1; m < dataLilinDest.length; m++) {
+        var asalPetugasDest = dataLilinDest[m][7]; // Dest Col H
+        var cleanAsalPetugasDest = asalPetugasDest ? asalPetugasDest.toString().trim().toLowerCase() : "";
+        
+        if (cleanAsalPetugasDest === cleanWilayahSrc) {
+          sheetLilinDest.getRange(m + 1, 6).setValue(lingkunganSrc).setFontColor("blue"); // Changed to Col F (Index 6) and blue
+          sheetLilinDest.getRange(m + 1, 9).setValue(namaSuamiSrc).setFontColor("blue");  // Col I, changed to blue
+          sheetLilinDest.getRange(m + 1, 10).setValue(namaIstriSrc).setFontColor("blue"); // Col J, changed to blue
+        }
+      }
+    } 
+    // Rule B: If Wilayah is empty, match Pengurus/Kategorial
+    else if (kategorialSrc && kategorialSrc.toString().trim() !== "") {
+      var cleanKategorialSrc = kategorialSrc.toString().trim().toLowerCase();
+      
+      // Find matching Kategorial in Destination
+      for (var n = 1; n < dataLilinDest.length; n++) {
+        var kategorialDest = dataLilinDest[n][6]; // Dest Col G
+        var cleanKategorialDest = kategorialDest ? kategorialDest.toString().trim().toLowerCase() : "";
+        
+        if (cleanKategorialDest === cleanKategorialSrc) {
+          sheetLilinDest.getRange(n + 1, 9).setValue(namaSuamiSrc).setFontColor("blue");  // Col I, changed to blue
+          sheetLilinDest.getRange(n + 1, 10).setValue(namaIstriSrc).setFontColor("blue"); // Col J, changed to blue
+        }
+      }
+    }
+  }
+}

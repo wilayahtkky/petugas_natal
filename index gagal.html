@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jadwal Tugas Adven Katedral 2026</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+
+  <!-- Container utama dengan Flexbox agar footer bisa ditaruh di paling bawah -->
+  <div class="max-w-md mx-auto bg-white min-h-screen shadow-lg flex flex-col">
+    
+    <!-- WRAPPER STICKY: Bagian ini akan menempel di atas dan tidak ikut di-scroll -->
+    <div class="sticky top-0 z-20 bg-white shadow-md">
+      
+      <!-- Header & Event Filters -->
+      <div class="bg-red-700 text-white p-4 border-b-4 border-green-600">
+        <h1 class="text-xl font-bold text-center mb-4 tracking-wide">Jadwal Tugas Adven Katedral 2026</h1>
+        <div class="flex justify-between gap-2 overflow-x-auto pb-2">
+          <button onclick="setEvent('Adven I')" id="btn-Adven I" class="event-btn flex-1 py-2 px-3 rounded-lg text-sm font-bold bg-green-700 border-2 border-white shadow-md transition">Adven I</button>
+          <button onclick="setEvent('Adven II')" id="btn-Adven II" class="event-btn flex-1 py-2 px-3 rounded-lg text-sm font-semibold bg-green-500 border-2 border-transparent hover:bg-green-600 transition">Adven II</button>
+          <button onclick="setEvent('Adven III')" id="btn-Adven III" class="event-btn flex-1 py-2 px-3 rounded-lg text-sm font-semibold bg-green-500 border-2 border-transparent hover:bg-green-600 transition">Adven III</button>
+          <button onclick="setEvent('Adven IV')" id="btn-Adven IV" class="event-btn flex-1 py-2 px-3 rounded-lg text-sm font-semibold bg-green-500 border-2 border-transparent hover:bg-green-600 transition">Adven IV</button>
+        </div>
+      </div>
+
+      <!-- Category Tabs -->
+      <div class="flex border-b-2 border-red-200">
+        <button onclick="setTab('perarakan')" id="tab-perarakan" class="flex-1 py-3 text-center font-bold text-red-700 border-b-4 border-red-700 transition">Perarakan Korona</button>
+        <button onclick="setTab('penyalaan')" id="tab-penyalaan" class="flex-1 py-3 text-center font-semibold text-gray-400 border-b-4 border-transparent transition">Penyalaan Lilin</button>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="p-4 bg-gray-50 border-b border-red-100">
+        <div class="relative">
+          <input 
+            type="text" 
+            id="searchInput" 
+            oninput="handleSearch()" 
+            placeholder="Cari nama, lingkungan, atau wilayah..." 
+            class="w-full pl-10 pr-4 py-2 border-2 border-red-300 rounded-lg focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition"
+          >
+          <svg class="w-5 h-5 text-red-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+      </div>
+
+    </div>
+    <!-- AKHIR WRAPPER STICKY -->
+
+    <!-- Area Konten Utama (Dapat di-scroll) -->
+    <div class="flex-grow">
+      <!-- Loading State -->
+      <div id="loading" class="text-center p-8 text-red-600 font-semibold animate-pulse">Memuat data jadwal...</div>
+
+      <!-- Content Cards (Time Blocks) -->
+      <div id="cards-container" class="p-4"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-green-800 text-white text-center p-4 text-xs font-semibold mt-auto shadow-inner">
+      Panitia Natal Katedral Jakarta - Wil Theresia dari Kanak-Kanak Yesus &copy; 2026
+    </footer>
+
+  </div>
+
+  <script>
+    // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
+    const API_URL = "https://script.google.com/macros/s/AKfycby2O6yPTfTEp6Pk3xGzqAn4OWjcfKd6kr5hudd61pS47A2yf7wxr4GRdLhHbB4N9_b-3g/exec"; 
+                   
+    let db = { perarakan: [], penyalaan: [] };
+    let activeEvent = 'Adven I';
+    let activeTab = 'perarakan';
+    let searchQuery = '';
+
+    window.onload = () => {
+      fetch(API_URL)
+        .then(res => res.json())
+        .then(data => {
+          db = data;
+          document.getElementById('loading').style.display = 'none';
+          renderCards();
+        })
+        .catch(err => {
+          document.getElementById('loading').innerText = "Gagal memuat data. Silakan coba lagi.";
+        });
+    };
+
+    function setEvent(eventName) {
+      activeEvent = eventName;
+      document.querySelectorAll('.event-btn').forEach(btn => {
+        btn.classList.remove('bg-green-700', 'border-white', 'font-bold', 'shadow-md');
+        btn.classList.add('bg-green-500', 'border-transparent', 'font-semibold');
+      });
+      const activeBtn = document.getElementById('btn-' + eventName);
+      activeBtn.classList.remove('bg-green-500', 'border-transparent', 'font-semibold');
+      activeBtn.classList.add('bg-green-700', 'border-white', 'font-bold', 'shadow-md');
+      renderCards();
+    }
+
+    function setTab(tabName) {
+      activeTab = tabName;
+      document.querySelectorAll('[id^="tab-"]').forEach(tab => {
+        tab.classList.remove('text-red-700', 'border-red-700', 'font-bold');
+        tab.classList.add('text-gray-400', 'border-transparent', 'font-semibold');
+      });
+      const activeElement = document.getElementById('tab-' + tabName);
+      activeElement.classList.remove('text-gray-400', 'border-transparent', 'font-semibold');
+      activeElement.classList.add('text-red-700', 'border-red-700', 'font-bold');
+      renderCards();
+    }
+
+    function handleSearch() {
+      searchQuery = document.getElementById('searchInput').value.toLowerCase();
+      renderCards();
+    }
+
+    function toggleAccordion(index) {
+      const content = document.getElementById('content-' + index);
+      const icon = document.getElementById('icon-' + index);
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        icon.style.transform = 'rotate(180deg)';
+      } else {
+        content.classList.add('hidden');
+        icon.style.transform = 'rotate(0deg)';
+      }
+    }
+
+    function renderCards() {
+      const container = document.getElementById('cards-container');
+      container.innerHTML = '';
+
+      // Filter by Event
+      let records = db[activeTab].filter(item => (item.Event || "").toString().trim() === activeEvent);
+
+      // Filter by Search Query
+      if (searchQuery) {
+        records = records.filter(item => {
+          const rowData = Object.values(item).join(' ').toLowerCase();
+          return rowData.includes(searchQuery);
+        });
+      }
+
+      if (records.length === 0) {
+        container.innerHTML = `<p class="text-center text-gray-500 mt-10">Tidak ada data ditemukan.</p>`;
+        return;
+      }
+
+      // Sort records chronologically (Tanggal -> Jam)
+      records.sort((a, b) => {
+        let dtA = new Date((a.Tanggal || "") + " " + (a.jam || "00:00"));
+        let dtB = new Date((b.Tanggal || "") + " " + (b.jam || "00:00"));
+        if (!isNaN(dtA) && !isNaN(dtB)) {
+          return dtA - dtB;
+        } else {
+          let strA = (a.Tanggal || "") + " " + (a.jam || "");
+          let strB = (b.Tanggal || "") + " " + (b.jam || "");
+          return strA.localeCompare(strB);
+        }
+      });
+
+      // Group records by Date (Tanggal) first, then Time (jam)
+      const groupedData = {};
+      records.forEach(item => {
+        const dateKey = item.Tanggal || 'Tanggal Tidak Ditetapkan';
+        const timeKey = item.jam || 'Waktu Tidak Ditetapkan';
+        
+        if (!groupedData[dateKey]) groupedData[dateKey] = {};
+        if (!groupedData[dateKey][timeKey]) groupedData[dateKey][timeKey] = [];
+        
+        groupedData[dateKey][timeKey].push(item);
+      });
+
+      let html = '';
+      let accordionIndex = 0;
+
+      // Render grouped data
+      for (const [dateKey, timeGroups] of Object.entries(groupedData)) {
+        
+        // Render Date Divider
+        html += `
+          <div class="flex items-center my-6">
+            <div class="flex-grow border-t-2 border-red-200"></div>
+            <span class="mx-4 font-bold text-red-800 bg-red-100 px-4 py-1.5 rounded-full shadow-sm text-sm tracking-wide">
+              🗓️ ${dateKey}
+            </span>
+            <div class="flex-grow border-t-2 border-red-200"></div>
+          </div>
+        `;
+
+        // Render Time Blocks within the Date
+        for (const [timeKey, items] of Object.entries(timeGroups)) {
+          html += `
+            <div class="border-2 border-red-600 rounded-xl overflow-hidden bg-white shadow-sm mb-4">
+              <button onclick="toggleAccordion(${accordionIndex})" class="w-full flex justify-between items-center p-4 bg-green-50 hover:bg-green-100 transition-colors focus:outline-none">
+                <div class="flex items-center gap-3">
+                  <span class="bg-green-700 text-white px-3 py-1 rounded-md font-bold text-sm tracking-wide shadow-sm flex items-center gap-1">
+                    ⏰ ${timeKey}
+                  </span>
+                  <span class="text-sm font-bold text-red-700">${items.length} Petugas</span>
+                </div>
+                <svg id="icon-${accordionIndex}" class="w-5 h-5 text-red-700 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+              <div id="content-${accordionIndex}" class="hidden p-4 space-y-3 bg-red-50 border-t-2 border-red-200">
+          `;
+
+          items.forEach(item => {
+            let title, details, person;
+            
+            if (activeTab === 'perarakan') {
+              title = `${item.wilayah || ''} ${item.lingkungan ? '- ' + item.lingkungan : ''}`;
+              details = `Tugas: Perarakan Korona`;
+              person = `Petugas: <span class="font-bold text-gray-900">${item['Nama petugas'] || '-'}</span>`;
+            } else {
+              title = item['Asal Petugas'] || item.Wilayah || item.kategorial || '-';
+              details = `${item.Lingkungan ? `Lingkungan: ${item.Lingkungan}` : 'Tugas: Penyalaan Lilin'}`;
+              person = `Suami & Istri: <span class="font-bold text-gray-900">${item['Nama Suami'] || '-'} & ${item['Nama Istri'] || '-'}</span>`;
+            }
+
+            html += `
+              <div class="bg-white border border-red-300 rounded-lg p-3 shadow-sm relative border-l-4 border-l-green-600">
+                <h3 class="font-bold text-md leading-tight text-gray-800">${title}</h3>
+                <p class="text-sm text-gray-600 mt-2 mb-2">${details}</p>
+                <div class="pt-2 border-t border-gray-100 text-sm text-gray-700">
+                  ${person}
+                </div>
+              </div>
+            `;
+          });
+
+          html += `</div></div>`;
+          accordionIndex++;
+        }
+      }
+
+      container.innerHTML = html;
+    }
+  </script>
+</body>
+</html>

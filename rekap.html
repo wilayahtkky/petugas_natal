@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rekap Jadwal</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #f4f6f8; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: inline-block; }
+        button {
+            background-color: #1a73e8; color: white; padding: 15px 32px;
+            text-align: center; font-size: 16px; font-weight: bold; margin: 20px 0;
+            cursor: pointer; border: none; border-radius: 4px; transition: 0.3s;
+        }
+        button:hover { background-color: #1557b0; }
+        button:disabled { background-color: #cccccc; cursor: not-allowed; }
+        #status { margin-top: 15px; font-weight: bold; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Rekap Jadwal</h2>
+        <button id="btnGetData" onclick="getData()">GET DATA</button>
+        <div id="status">Ready to fetch data...</div>
+    </div>
+
+    <script>
+        // Replace this with your generated Google Apps Script Web App URL
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzksw9qTU2rJnmR1tcHHv6TSLq8aMMdYG_KQbccy-f3E-YIxEVezJweqmKGB65D8G-6DA/exec";
+
+        function getData() {
+            const btn = document.getElementById("btnGetData");
+            const statusDiv = document.getElementById("status");
+
+            btn.disabled = true;
+            btn.innerText = "Processing...";
+            statusDiv.innerText = "Copying data from source sheets. Please wait...";
+            statusDiv.style.color = "#d93025";
+
+            fetch(WEB_APP_URL)
+                .then(response => response.json())
+                .then(data => {
+                    if(data.status === "success") {
+                        statusDiv.innerText = "Rekap Selesai!";
+                        statusDiv.style.color = "#1e8e3e";
+                        
+                        // Alert popup exactly as requested
+                        alert("Done! The jobs have finished. Please check your Google Sheet directly to see if all data is correct.");
+                    } else {
+                        statusDiv.innerText = "Error: " + data.message;
+                        statusDiv.style.color = "red";
+                        alert("Failed: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    statusDiv.innerText = "Network Error. Check console.";
+                    statusDiv.style.color = "red";
+                    alert("Network error. Make sure your Web App URL is correct.");
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerText = "GET DATA";
+                });
+        }
+    </script>
+</body>
+</html>
