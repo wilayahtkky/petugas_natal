@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panitia-Jadwal Tugas Adven Katedral 2026</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- LAYAR LOGIN PASSWORD -->
+  <div id="login-screen" class="login-overlay">
+    <div class="login-card">
+      <h2 class="login-title">Akses Panitia Adven 2026</h2>
+      <p class="login-subtitle">Masukkan kata sandi untuk melihat jadwal dan kontak petugas.</p>
+      <form onsubmit="handleLogin(event)" class="login-form">
+        <input type="password" id="passwordInput" class="login-input" placeholder="Masukkan Password..." required autocomplete="current-password">
+        <button type="submit" id="btnLogin" class="btn-login">Masuk</button>
+      </form>
+      <p id="login-error" class="login-error hidden"></p>
+    </div>
+  </div>
+
+  <!-- KONTEN APLIKASI UTAMA (HIDDEN SEBELUM LOGIN) -->
+  <div id="main-app" class="app-container hidden">
+    <div class="header-sticky">
+      
+      <div class="header-top">
+        <h1 class="header-title">Jadwal Tugas Adven Katedral 2026 - Panitia</h1>
+        <div class="event-filters">
+          <button onclick="setEvent('Adven I')" id="btn-Adven I" class="btn-event active">Adven I</button>
+          <button onclick="setEvent('Adven II')" id="btn-Adven II" class="btn-event">Adven II</button>
+          <button onclick="setEvent('Adven III')" id="btn-Adven III" class="btn-event">Adven III</button>
+          <button onclick="setEvent('Adven IV')" id="btn-Adven IV" class="btn-event">Adven IV</button>
+        </div>
+      </div>
+
+      <div class="tabs-container">
+        <button onclick="setTab('perarakan')" id="tab-perarakan" class="tab-btn active">Perarakan Korona</button>
+        <button onclick="setTab('penyalaan')" id="tab-penyalaan" class="tab-btn">Penyalaan Lilin</button>
+      </div>
+
+      <div class="search-container">
+        <div class="search-wrapper">
+          <input type="text" id="searchInput" oninput="handleSearch()" class="search-input" placeholder="Cari nama, no HP, lingkungan, atau wilayah...">
+          <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="main-content">
+      <div id="loading" class="loading-text">Memuat data jadwal...</div>
+      <div id="cards-container" class="cards-container"></div>
+    </div>
+
+    <!-- AKORDION PANEL ADMIN / REFRESH DATA (DEFAULT HIDDEN) -->
+    <div class="admin-sync-wrapper">
+      <div class="admin-accordion">
+        <button onclick="toggleAdminAccordion()" class="admin-accordion-header" type="button">
+          <span>⚙️ Panel Admin / Sinkronisasi Data</span>
+          <svg id="admin-chevron" class="chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        <div id="admin-accordion-content" class="admin-accordion-content hidden">
+          <p class="admin-desc">Tarik data terbaru petugas & nomor HP dari Google Form ke jadwal utama.</p>
+          <button onclick="syncData()" id="btnSync" class="btn-sync" type="button">
+            🔄 Refresh / Update Data Sekarang
+          </button>
+          <p id="sync-status" class="sync-status hidden"></p>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer-bar">
+      Panitia Natal Katedral Jakarta <p> Wilayah Theresia dari Kanak-Kanak Yesus &copy; 2026
+    </footer>
+  </div>
+
+  <script>
+    // GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA YANG BARU
+    const API_URL = "https://script.google.com/macros/s/AKfycbxegF2l2aTIlJo9Jnsn3yIqNThinFVvcYycMV5-w-CSPxJl5EH_JJkZghcWQ7UbVafLQg/exec"; 
+    
+    let db = { perarakan: [], penyalaan: [] };
+    let activeEvent = 'Adven I';
+    let activeTab = 'perarakan';
+    let searchQuery = '';
+    let userPassword = '';
+
+    // Cek jika password sudah tersimpan di sessionStorage
+    window.onload = () => {
+      const savedPwd = sessionStorage.getItem('panitia_pwd');
+      if (savedPwd) {
+        userPassword = savedPwd;
+        verifyAndLoadData(savedPwd, true);
+      }
+    };
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const inputPwd = document.getElementById('passwordInput').value.trim();
+      if (!inputPwd) return;
+
+      const btn = document.getElementById('btnLogin');
+      const errEl = document.getElementById('login-error');
+      
+      btn.disabled = true;
+      btn.innerText = "Memverifikasi...";
+      errEl.classList.add('hidden');
+
+      verifyAndLoadData(inputPwd, false);
+    }
+
+    function verifyAndLoadData(pwd, isAutoLogin) {
+      const btn = document.getElementById('btnLogin');
+      const errEl = document.getElementById('login-error');
+
+      fetch(`${API_URL}?action=getData&password=${encodeURIComponent(pwd)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "unauthorized") {
+            sessionStorage.removeItem('panitia_pwd');
+            if (!isAutoLogin) {
+              errEl.innerText = "Password salah. Silakan coba lagi.";
+              errEl.classList.remove('hidden');
+              btn.disabled = false;
+              btn.innerText = "Masuk";
+            }
+            return;
+          }
+
+          // Login sukses
+          userPassword = pwd;
+          sessionStorage.setItem('panitia_pwd', pwd);
+          db = data;
+
+          document.getElementById('login-screen').classList.add('hidden');
+          document.getElementById('main-app').classList.remove('hidden');
+          document.getElementById('loading').style.display = 'none';
+          renderCards();
+        })
+        .catch(err => {
+          if (!isAutoLogin) {
+            errEl.innerText = "Gagal terhubung ke server. Periksa koneksi internet.";
+            errEl.classList.remove('hidden');
+            btn.disabled = false;
+            btn.innerText = "Masuk";
+          }
+        });
+    }
+
+    function toggleAdminAccordion() {
+      const content = document.getElementById('admin-accordion-content');
+      const icon = document.getElementById('admin-chevron');
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        icon.style.transform = 'rotate(180deg)';
+      } else {
+        content.classList.add('hidden');
+        icon.style.transform = 'rotate(0deg)';
+      }
+    }
+
+    function syncData() {
+      const btnSync = document.getElementById('btnSync');
+      const statusEl = document.getElementById('sync-status');
+
+      btnSync.disabled = true;
+      btnSync.innerText = "⏳ Sedang menyinkronkan data...";
+      statusEl.classList.remove('hidden', 'status-success', 'status-error');
+      statusEl.innerText = "Mohon tunggu, sedang menarik data dari Google Sheet sumber...";
+
+      fetch(`${API_URL}?action=sync&password=${encodeURIComponent(userPassword)}`)
+        .then(res => res.json())
+        .then(resData => {
+          if (resData.status === "success") {
+            statusEl.classList.add('status-success');
+            statusEl.innerText = "✅ " + resData.message + " Memuat ulang tampilan...";
+            // Ambil ulang data terbaru setelah sync
+            return fetch(`${API_URL}?action=getData&password=${encodeURIComponent(userPassword)}`)
+              .then(r => r.json())
+              .then(freshData => {
+                db = freshData;
+                renderCards();
+                statusEl.innerText = "✅ Data berhasil diperbarui dan ditampilkan!";
+              });
+          } else {
+            statusEl.classList.add('status-error');
+            statusEl.innerText = "❌ Gagal: " + (resData.message || "Terjadi kesalahan.");
+          }
+        })
+        .catch(err => {
+          statusEl.classList.add('status-error');
+          statusEl.innerText = "❌ Gagal terhubung ke server saat sinkronisasi.";
+        })
+        .finally(() => {
+          btnSync.disabled = false;
+          btnSync.innerText = "🔄 Refresh / Update Data Sekarang";
+        });
+    }
+
+    function setEvent(eventName) {
+      activeEvent = eventName;
+      document.querySelectorAll('.btn-event').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('btn-' + eventName).classList.add('active');
+      renderCards();
+    }
+
+    function setTab(tabName) {
+      activeTab = tabName;
+      document.querySelectorAll('.tab-btn').forEach(tab => tab.classList.remove('active'));
+      document.getElementById('tab-' + tabName).classList.add('active');
+      renderCards();
+    }
+
+    function handleSearch() {
+      searchQuery = document.getElementById('searchInput').value.toLowerCase();
+      renderCards();
+    }
+
+    function toggleAccordion(index) {
+      const content = document.getElementById('content-' + index);
+      const icon = document.getElementById('icon-' + index);
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        icon.style.transform = 'rotate(180deg)';
+      } else {
+        content.classList.add('hidden');
+        icon.style.transform = 'rotate(0deg)';
+      }
+    }
+
+    function formatWaLink(phone) {
+      if (!phone || phone === '-') return '-';
+      let cleanNum = phone.toString().replace(/[^0-9]/g, '');
+      if (cleanNum.startsWith('0')) {
+        cleanNum = '62' + cleanNum.substring(1);
+      }
+      if (cleanNum.length < 8) return phone;
+      return `<a href="https://wa.me/${cleanNum}" target="_blank" class="wa-link">📱 ${phone}</a>`;
+    }
+
+    function renderCards() {
+      const container = document.getElementById('cards-container');
+      container.innerHTML = '';
+
+      let records = db[activeTab].filter(item => (item.Event || "").toString().trim() === activeEvent);
+
+      if (searchQuery) {
+        records = records.filter(item => {
+          const rowData = Object.values(item).join(' ').toLowerCase();
+          return rowData.includes(searchQuery);
+        });
+      }
+
+      if (records.length === 0) {
+        container.innerHTML = `<p class="text-center text-gray-500 mt-10">Tidak ada data ditemukan.</p>`;
+        return;
+      }
+
+      records.sort((a, b) => {
+        let dtA = new Date((a.Tanggal || "") + " " + (a.jam || "00:00"));
+        let dtB = new Date((b.Tanggal || "") + " " + (b.jam || "00:00"));
+        if (!isNaN(dtA) && !isNaN(dtB)) {
+          return dtA - dtB;
+        } else {
+          let strA = (a.Tanggal || "") + " " + (a.jam || "");
+          let strB = (b.Tanggal || "") + " " + (b.jam || "");
+          return strA.localeCompare(strB);
+        }
+      });
+
+      const groupedData = {};
+      records.forEach(item => {
+        const dateKey = item.Tanggal || 'Tanggal Tidak Ditetapkan';
+        const timeKey = item.jam || 'Waktu Tidak Ditetapkan';
+        
+        if (!groupedData[dateKey]) groupedData[dateKey] = {};
+        if (!groupedData[dateKey][timeKey]) groupedData[dateKey][timeKey] = [];
+        
+        groupedData[dateKey][timeKey].push(item);
+      });
+
+      let html = '';
+      let accordionIndex = 0;
+
+      let sectionTitle = activeTab === 'perarakan' ? 'Petugas Perarakan Korona Adven' : 'Petugas Penyalaan Lilin Adven';
+      html += `<h2 class="tab-section-title">${sectionTitle}</h2>`;
+
+      let unitLabel = activeTab === 'perarakan' ? 'Petugas' : 'Pasangan suami istri';
+
+      for (const [dateKey, timeGroups] of Object.entries(groupedData)) {
+        html += `
+          <div class="date-divider">
+            <div class="divider-line"></div>
+            <span class="date-badge">🗓️ ${dateKey}</span>
+            <div class="divider-line"></div>
+          </div>
+        `;
+
+        for (const [timeKey, items] of Object.entries(timeGroups)) {
+          html += `
+            <div class="accordion-item">
+              <button onclick="toggleAccordion(${accordionIndex})" class="accordion-header">
+                <div class="accordion-title-group">
+                  <span class="time-badge">⏰ ${timeKey}</span>
+                  <span class="petugas-count">${items.length} ${unitLabel}</span>
+                </div>
+                <svg id="icon-${accordionIndex}" class="chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+              <div id="content-${accordionIndex}" class="accordion-content hidden">
+          `;
+
+          items.forEach(item => {
+            let title, details, person;
+            
+            if (activeTab === 'perarakan') {
+              const wilayah = item.Wilayah || item.wilayah || '';
+              const lingkungan = item.Lingkungan || item.lingkungan || '';
+              const namaPetugas = item['Nama Petugas'] || item['Nama petugas'] || '-';
+              const noWa = item.wa || item['no HP'] || '-';
+
+              title = `${wilayah} ${lingkungan ? '- ' + lingkungan : ''}`;
+              details = `Tugas: Perarakan Korona`;
+              person = `
+                <div>Petugas: <span class="font-bold" style="color: #0000FF;">${namaPetugas}</span></div>
+                <div class="phone-row">Kontak WA: ${formatWaLink(noWa)}</div>
+              `;
+            } else {
+              const asal = item['Asal Petugas'] || item.Wilayah || item.kategorial || '-';
+              const lingkungan = item.Lingkungan || '';
+              const namaSuami = item['Nama Suami'] || '-';
+              const namaIstri = item['Nama Istri'] || '-';
+              const noSuami = item['No.S'] || item['No Suami'] || '-';
+              const noIstri = item['No.I'] || item['No Istri'] || '-';
+
+              title = asal;
+              details = `${lingkungan ? `Lingkungan: ${lingkungan}` : 'Tugas: Penyalaan Lilin'}`;
+              person = `
+                <div>Suami: <span class="font-bold" style="color: #0000FF;">${namaSuami}</span> (${formatWaLink(noSuami)})</div>
+                <div class="phone-row">Istri: <span class="font-bold" style="color: #0000FF;">${namaIstri}</span> (${formatWaLink(noIstri)})</div>
+              `;
+            }
+
+            html += `
+              <div class="task-card">
+                <h3 class="task-title">${title}</h3>
+                <p class="task-details">${details}</p>
+                <div class="task-person">${person}</div>
+              </div>
+            `;
+          });
+
+          html += `</div></div>`;
+          accordionIndex++;
+        }
+      }
+
+      container.innerHTML = html;
+    }
+  </script>
+</body>
+</html>

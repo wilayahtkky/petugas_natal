@@ -1,14 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
 :root {
-  /* Palet Warna Katedral  #8B1A2B*/
+  /* Palet Warna Katedral #8B1A2B */
   --katedral-red: #8B1A2B; 
   --katedral-red-light: #f5ecee; 
   --katedral-red-border: #d4a7b0; 
   --katedral-red-text: #6b1421; 
-  --katedral-yellow: #D4A017; /*#fef08a; /* warna emas */
+  --katedral-yellow: #D4A017;
   
-  /* Palet Tambahan green 500 #22c55e*/
+  /* Palet Tambahan */
   --green-50: #f0fdf4;
   --green-100: #dcfce7;
   --green-500: #166534;
@@ -17,6 +17,7 @@
   --green-800: #166534;
   --gray-50: #f9fafb;
   --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
   --gray-400: #9ca3af;
   --gray-500: #6b7280;
   --gray-600: #4b5563;
@@ -27,6 +28,79 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Inter', sans-serif; background-color: var(--gray-100); color: var(--gray-800); }
+
+/* Layar Login */
+.login-overlay {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background-color: var(--katedral-red-light);
+}
+.login-card {
+  width: 100%;
+  max-width: 24rem;
+  background: white;
+  padding: 2rem 1.5rem;
+  border-radius: 1rem;
+  border-top: 6px solid var(--katedral-red);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+.login-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--katedral-red);
+  margin-bottom: 0.5rem;
+}
+.login-subtitle {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+  margin-bottom: 1.5rem;
+}
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.login-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--katedral-red-border);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  outline: none;
+  text-align: center;
+}
+.login-input:focus {
+  border-color: var(--katedral-red);
+}
+.btn-login {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: var(--katedral-red);
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.btn-login:hover:not(:disabled) {
+  background-color: var(--katedral-red-text);
+}
+.btn-login:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.login-error {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #dc2626;
+}
 
 /* Layout Utama */
 .app-container { max-width: 28rem; margin: 0 auto; background: white; min-height: 100vh; display: flex; flex-direction: column; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
@@ -79,8 +153,77 @@ body { font-family: 'Inter', sans-serif; background-color: var(--gray-100); colo
 .task-card { background: white; border: 1px solid var(--katedral-red-border); border-radius: 0.5rem; padding: 0.75rem; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); border-left: 4px solid var(--green-600); }
 .task-title { font-weight: 700; font-size: 1rem; color: var(--gray-800); margin-bottom: 0.5rem; line-height: 1.25; }
 .task-details { font-size: 0.875rem; color: var(--gray-600); margin-bottom: 0.5rem; }
-.task-person { padding-top: 0.5rem; border-top: 1px solid var(--gray-100); font-size: 0.875rem; color: var(--gray-700); }
+.task-person { padding-top: 0.5rem; border-top: 1px solid var(--gray-100); font-size: 0.875rem; color: var(--gray-700); line-height: 1.5; }
+.phone-row { margin-top: 0.25rem; }
+.wa-link { color: var(--green-700); font-weight: 600; text-decoration: none; }
+.wa-link:hover { text-decoration: underline; }
 .font-bold { font-weight: 700; color: var(--gray-900); }
+
+/* Akordion Admin / Sync di Bagian Bawah */
+.admin-sync-wrapper {
+  padding: 0 1rem 1rem 1rem;
+  margin-top: 1rem;
+}
+.admin-accordion {
+  border: 1px solid var(--gray-200);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background-color: var(--gray-50);
+}
+.admin-accordion-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: var(--gray-50);
+  border: none;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--gray-600);
+  cursor: pointer;
+}
+.admin-accordion-header:hover {
+  background-color: var(--gray-100);
+}
+.admin-accordion-content {
+  padding: 1rem;
+  border-top: 1px solid var(--gray-200);
+  background-color: white;
+  text-align: center;
+}
+.admin-desc {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  margin-bottom: 0.75rem;
+}
+.btn-sync {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  background-color: var(--green-700);
+  color: white;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.btn-sync:hover:not(:disabled) {
+  background-color: var(--green-800);
+}
+.btn-sync:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.sync-status {
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--gray-700);
+}
+.status-success { color: var(--green-700); }
+.status-error { color: #dc2626; }
 
 /* Footer & Utilities */
 .footer-bar { background-color: var(--green-800); color: white; text-align: center; padding: 1rem; font-size: 0.75rem; font-weight: 600; margin-top: auto; }
