@@ -75,7 +75,7 @@ async function fetchScheduleData(password = "") {
     }
   } catch (err) {
     console.error("Error memuat data:", err);
-    alert("Gagal memuat data dari server. Pastikan URL Google Apps Script sudah benar.");
+    alert("Gagal memuat data dari server.");
   } finally {
     loader.classList.add("hidden");
     mainContent.classList.remove("hidden");
