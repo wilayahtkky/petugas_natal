@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jadwal dan Petugas Adven 2026 Katedral Jakarta</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Main Header -->
+    <header class="app-header">
+      <img src="logoK7.png" alt="Logo Katedral Jakarta" class="header-logo" />
+      <h1 class="header-title">Jadwal dan Petugas Adven 2026 Katedral Jakarta</h1>
+    </header>
+
+    <!-- Password Unlock Bar -->
+    <div class="auth-bar" id="authBar">
+      <div class="auth-status">
+        <span id="lockIcon">🔒</span>
+        <span id="authStatusText">Nomor telepon tersembunyi</span>
+      </div>
+      <button type="button" class="btn-auth" id="openAuthBtn">Buka No. HP</button>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div class="loader-box" id="loaderBox">
+      <div class="spinner"></div>
+      <p>Memuat jadwal dari Google Sheets...</p>
+    </div>
+
+    <!-- Main Accordion Container -->
+    <main class="accordion-root hidden" id="mainContent">
+      
+      <!-- Accordion 1: Jadwal Petugas Perarakan Korona -->
+      <section class="accordion-item main-acc">
+        <button type="button" class="accordion-header main-acc-btn" aria-expanded="false" data-target="panelKorona">
+          <span class="acc-title-wrap">
+            <span class="acc-icon">🕯️</span>
+            <span>Jadwal Petugas Perarakan Korona</span>
+          </span>
+          <span class="chevron">▾</span>
+        </button>
+
+        <div class="accordion-panel" id="panelKorona">
+          <div class="panel-inner">
+            <p class="hint-text">Tap nama <strong>Wilayah</strong> untuk melihat Lingkungan &amp; Petugas</p>
+            <div class="table-wrapper">
+              <table class="schedule-table">
+                <thead>
+                  <tr>
+                    <th class="col-hari">Hari / Tanggal</th>
+                    <th class="col-jam">Jam Misa</th>
+                    <th class="col-wilayah">Wilayah</th>
+                  </tr>
+                </thead>
+                <tbody id="koronaTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Accordion 2: Jadwal Petugas Penyala Lilin Adven -->
+      <section class="accordion-item main-acc">
+        <button type="button" class="accordion-header main-acc-btn" aria-expanded="false" data-target="panelLilin">
+          <span class="acc-title-wrap">
+            <span class="acc-icon">🔥</span>
+            <span>Jadwal Petugas Penyala Lilin Adven</span>
+          </span>
+          <span class="chevron">▾</span>
+        </button>
+
+        <div class="accordion-panel" id="panelLilin">
+          <div class="panel-inner">
+            <p class="hint-text">Pilih Minggu Adven, lalu tap <strong>Petugas</strong> untuk melihat Pasutri</p>
+            <!-- Nested Accordions for Adven I - IV rendered dynamically -->
+            <div class="sub-accordion-list" id="lilinSubAccordions"></div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Modal Detail Petugas (Korona & Penyala Lilin) -->
+  <div class="modal-overlay" id="detailModal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <div>
+          <span class="modal-badge" id="modalBadge">Info Jadwal</span>
+          <h2 id="modalTitle">Detail Petugas</h2>
+        </div>
+        <button type="button" class="close-btn" id="closeModalBtn" aria-label="Tutup">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- Modal Password -->
+  <div class="modal-overlay" id="passwordModal" aria-hidden="true">
+    <div class="modal-card modal-sm" role="dialog" aria-modal="true" aria-labelledby="passModalTitle">
+      <div class="modal-header">
+        <div>
+          <span class="modal-badge">Akses Panitia</span>
+          <h2 id="passModalTitle">Masukkan Password</h2>
+        </div>
+        <button type="button" class="close-btn" id="closePassModalBtn" aria-label="Tutup">&times;</button>
+      </div>
+      <form class="modal-body" id="passwordForm">
+        <p class="pass-desc">Masukkan password panitia untuk menampilkan nomor telepon / WhatsApp petugas.</p>
+        <input
+          type="password"
+          id="passwordInput"
+          class="pass-input"
+          placeholder="Ketik password..."
+          autocomplete="off"
+          required
+        />
+        <p class="pass-error hidden" id="passErrorText">Password salah. Silakan coba lagi.</p>
+        <button type="submit" class="btn-submit" id="submitPassBtn">Verifikasi Password</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
