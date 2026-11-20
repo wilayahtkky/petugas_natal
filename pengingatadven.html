@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Web untuk PIC pengingat jadwal Adven</title>
+  <link rel="stylesheet" href="stylepengingat.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Main Header -->
+    <header class="app-header">
+      <img src="logoK7.png" alt="Logo Katedral Jakarta" class="header-logo" />
+      <h1 class="header-title">Web untuk PIC pengingat jadwal Adven</h1>
+    </header>
+
+    <!-- PIC Login Gate (Tampil sebelum PIC login) -->
+    <section class="login-card" id="loginCard">
+      <div class="login-card-header">
+        <span class="modal-badge">Akses PIC Pengingat</span>
+        <h2>Pilih Nama PIC &amp; Masukkan Password</h2>
+      </div>
+      <form class="login-form" id="picLoginForm">
+        <div class="form-group">
+          <label for="picSelect">Nama PIC</label>
+          <select id="picSelect" class="form-control" required>
+            <option value="" disabled selected>-- Pilih Nama PIC --</option>
+            <option value="Warti">Warti</option>
+            <option value="Anik">Anik</option>
+            <option value="Helena">Helena</option>
+            <option value="Buntoro">Buntoro</option>
+            <option value="Ela">Ela</option>
+            <option value="Claire">Claire</option>
+            <option value="Kathrina">Kathrina</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="passwordInput">Password</label>
+          <input
+            type="password"
+            id="passwordInput"
+            class="form-control"
+            placeholder="Ketik password PIC..."
+            autocomplete="off"
+            required
+          />
+        </div>
+
+        <p class="pass-error hidden" id="passErrorText">Nama PIC atau password salah. Silakan coba lagi.</p>
+        <button type="submit" class="btn-submit" id="submitLoginBtn">Masuk &amp; Lihat Jadwal</button>
+      </form>
+    </section>
+
+    <!-- Active PIC Status Bar (Tampil setelah login berhasil) -->
+    <div class="auth-bar unlocked hidden" id="picStatusBar">
+      <div class="auth-status">
+        <span>👤</span>
+        <span>PIC Aktif: <strong id="activePicName">-</strong></span>
+      </div>
+      <button type="button" class="btn-auth" id="logoutBtn">Ganti PIC / Keluar</button>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div class="loader-box hidden" id="loaderBox">
+      <div class="spinner"></div>
+      <p>Memuat jadwal PIC...(mohon tunggu)...</p>
+    </div>
+
+    <!-- Main Accordion Container -->
+    <main class="accordion-root hidden" id="mainContent">
+      <b>Tap/click tombol di bawah untuk membuka jadwal tugas pengingat Anda</b>
+
+      <!-- Accordion 1: Jadwal Petugas Perarakan Korona -->
+      <section class="accordion-item main-acc">
+        <button type="button" class="accordion-header main-acc-btn" aria-expanded="false" data-target="panelKorona">
+          <span class="acc-title-wrap">
+            <span class="acc-icon">🕯️</span>
+            <span>Jadwal Petugas Perarakan Korona <span class="count-badge" id="koronaCountBadge">0</span></span>
+          </span>
+          <span class="chevron">▾</span>
+        </button>
+
+        <div class="accordion-panel" id="panelKorona">
+          <div class="panel-inner">
+            <p class="hint-text">Tap nama <strong>Wilayah</strong> untuk melihat Lingkungan, Petugas &amp; No. WA</p>
+            <div id="koronaEmptyMsg" class="empty-state hidden">Tidak ada jadwal Perarakan Korona untuk PIC ini.</div>
+            <div class="table-wrapper" id="koronaTableWrapper">
+              <table class="schedule-table">
+                <thead>
+                  <tr>
+                    <th class="col-hari">Hari / Tanggal</th>
+                    <th class="col-jam">Jam Misa</th>
+                    <th class="col-wilayah">Wilayah</th>
+                  </tr>
+                </thead>
+                <tbody id="koronaTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Accordion 2: Jadwal Petugas Penyala Lilin Adven -->
+      <section class="accordion-item main-acc">
+        <button type="button" class="accordion-header main-acc-btn" aria-expanded="false" data-target="panelLilin">
+          <span class="acc-title-wrap">
+            <span class="acc-icon">🔥</span>
+            <span>Jadwal Petugas Penyala Lilin Adven <span class="count-badge" id="lilinCountBadge">0</span></span>
+          </span>
+          <span class="chevron">▾</span>
+        </button>
+
+        <div class="accordion-panel" id="panelLilin">
+          <div class="panel-inner">
+            <p class="hint-text">Pilih Minggu Adven, lalu tap <strong>Petugas</strong> untuk melihat Pasutri &amp; No. WA</p>
+            <div id="lilinEmptyMsg" class="empty-state hidden">Tidak ada jadwal Penyala Lilin Adven untuk PIC ini.</div>
+            <!-- Nested Accordions for Adven I - IV rendered dynamically -->
+            <div class="sub-accordion-list" id="lilinSubAccordions"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal Detail Petugas (Korona & Penyala Lilin) -->
+  <div class="modal-overlay" id="detailModal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <div>
+          <span class="modal-badge" id="modalBadge">Info Jadwal</span>
+          <h2 id="modalTitle">Detail Petugas</h2>
+        </div>
+        <button type="button" class="close-btn" id="closeModalBtn" aria-label="Tutup">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="scriptpengingat.js"></script>
+</body>
+</html>
