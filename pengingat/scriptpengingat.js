@@ -1,5 +1,23 @@
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwDsAI2Wjk69VAe2EJ0plZhuUBaBext_CKQFCQJypJzn4hg5eAwHhiNx0MocB41JVRN/exec";
 
+// =========================================================================
+// TEMPLATE PESAN WHATSAPP (EDIT TEKS DI DALAM TANDA BACKTICK `...` DI SINI)
+// =========================================================================
+// Anda juga bisa menyisipkan variabel opsional berikut jika sewaktu-waktu butuh:
+// {petugas}, {lingkungan}, {wilayah}, {tanggal}, {jam}
+const KORONA_WA_TEMPLATE = `Bapak/Ibu lingk. {lingkungan}, Kami dari Panitia Natal 2026 mau mengingatkan Bapak/ibu  untuk hadir Pada *GR (Gladi Resik) Perarakan Korona Adven*
+
+*Sabtu, 21 Nov 2026*
+*Pk. 19.00 Wib*
+Di dalam gereja Katedral Jakarta
+
+*Mohon membawa Korona Lingkungan* masing-masing ( tanpa lilin )
+untuk diatur tata letaknya nanti.
+
+Pada saat bertugas Minggu depan Adven I, Dress code nya adalah:
+Batik (kemeja/blouse, Sopan tertutup tidak ketat ) dan mengenakan sepatu.`;
+// =========================================================================
+
 let appData = {
   authorized: false,
   pic: "",
@@ -47,11 +65,23 @@ function getShortWilayahLabel(wilayah) {
   return aliases[wilayah] || wilayah;
 }
 
-function formatWaHref(rawPhone) {
+// Helper: Membuat link wa.me beserta teks pesan otomatis (jika ada)
+function formatWaHref(rawPhone, messageText = "") {
   const digits = (rawPhone || "").replace(/[^0-9]/g, "");
   if (!digits) return "";
   const waNum = digits.startsWith("0") ? "62" + digits.slice(1) : digits;
-  return `https://wa.me/${waNum}`;
+  const baseUrl = `https://wa.me/${waNum}`;
+  return messageText ? `${baseUrl}?text=${encodeURIComponent(messageText)}` : baseUrl;
+}
+
+// Helper: Mengisi template pesan WA Korona
+function buildKoronaWaMessage(data = {}) {
+  return KORONA_WA_TEMPLATE
+    .replace(/\{petugas\}/g, data.petugas || "")
+    .replace(/\{lingkungan\}/g, data.lingkungan || "")
+    .replace(/\{wilayah\}/g, data.wilayah || "")
+    .replace(/\{tanggal\}/g, data.tanggal || "")
+    .replace(/\{jam\}/g, data.jam || "");
 }
 
 // Fetch data khusus PIC dari Google Apps Script
@@ -97,7 +127,6 @@ async function fetchPicScheduleData(picName, password, isFromForm = false) {
       renderKoronaTable(json.korona || []);
       renderLilinAccordions(json.lilin || []);
     } else {
-      // Gagal login / password salah
       sessionStorage.removeItem("adven_pic_name");
       sessionStorage.removeItem("adven_pic_pass");
       showLoginScreen();
@@ -240,8 +269,16 @@ function openKoronaModal(dateGroup, jam, wilGroup) {
 
   modalBody.innerHTML = wilGroup.items
     .map((item, idx) => {
+      const waMessage = buildKoronaWaMessage({
+        petugas: item.petugas,
+        lingkungan: item.lingkungan,
+        wilayah: wilGroup.wilayah,
+        tanggal: `${dateGroup.hari} ${dateGroup.tanggalDisplay}`,
+        jam: `Pk ${jam.replace(":", ".")}`
+      });
+
       const phoneHtml = item.wa
-        ? `<a class="phone-link" href="${formatWaHref(item.wa)}" target="_blank" rel="noopener">📞 ${item.wa}</a>`
+        ? `<a class="phone-link" href="${formatWaHref(item.wa, waMessage)}" target="_blank" rel="noopener">📞 ${item.wa}</a>`
         : `<span class="phone-empty">No. HP kosong</span>`;
 
       return `
@@ -319,7 +356,6 @@ function renderLilinAccordions(rows) {
     container.appendChild(section);
   });
 
-  // Attach click handlers untuk tombol tabel Penyala Lilin
   container.querySelectorAll(".lilin-petugas-cell").forEach((cell) => {
     cell.addEventListener("click", () => {
       const payload = JSON.parse(cell.dataset.info);
@@ -329,7 +365,6 @@ function renderLilinAccordions(rows) {
 }
 
 function buildLilinTableHtml(eventRows, eventName) {
-  // Group: Tanggal -> Jam -> Asal Petugas
   const dateGroups = [];
   eventRows.forEach((row) => {
     let dateObj = dateGroups.find((d) => d.tanggal === row.tanggal);
