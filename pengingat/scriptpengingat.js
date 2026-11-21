@@ -14,7 +14,7 @@ Di dalam gereja Katedral Jakarta
 *Mohon membawa Korona Lingkungan* masing-masing ( tanpa lilin )
 untuk diatur tata letaknya nanti.
 
-Pada saat bertugas Minggu depan Adven I, Dress code nya adalah:
+Pada saat bertugas Minggu depan pada Minggu Adven I, Dress code nya adalah:
 Batik (kemeja/blouse, Sopan tertutup tidak ketat ) dan mengenakan sepatu.`;
 // =========================================================================
 
