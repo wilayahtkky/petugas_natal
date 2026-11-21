@@ -5,17 +5,12 @@ const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwDsAI2Wjk69VAe
 // =========================================================================
 // Anda juga bisa menyisipkan variabel opsional berikut jika sewaktu-waktu butuh:
 // {petugas}, {lingkungan}, {wilayah}, {tanggal}, {jam}
-const KORONA_WA_TEMPLATE = `Bapak/Ibu lingk. {lingkungan}, Kami dari Panitia Natal 2026 mau mengingatkan Bapak/ibu  untuk hadir Pada *GR (Gladi Resik) Perarakan Korona Adven*
+const KORONA_WA_TEMPLATE = `Bapak/Ibu lingk. {lingkungan}, Kami dari Panitia Natal 2026 mau mengingatkan Bapak/ibu  untuk hadir 30 menit lebih awal dari jadwal Misa untuk Perarakan Korona Adven*
 
-*Sabtu, 21 Nov 2026*
-*Pk. 19.00 Wib*
-Di dalam gereja Katedral Jakarta
+*Mohon membawa Korona Lingkungan dan dipastikan lilin dapat tertancap baik ketika dibawa pada perarakan*
 
-*Mohon membawa Korona Lingkungan* masing-masing ( tanpa lilin )
-untuk diatur tata letaknya nanti.
-
-Pada saat bertugas Minggu depan pada Minggu Adven I, Dress code nya adalah:
-Batik (kemeja/blouse, Sopan tertutup tidak ketat ) dan mengenakan sepatu.`;
+Dress code petugas Korona adalah:
+*Batik* (kemeja/blouse, Sopan tertutup tidak ketat ) bawahan warna gelap dan mengenakan sepatu senada.`;
 // =========================================================================
 
 let appData = {
