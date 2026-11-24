@@ -1,16 +1,37 @@
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwDsAI2Wjk69VAe2EJ0plZhuUBaBext_CKQFCQJypJzn4hg5eAwHhiNx0MocB41JVRN/exec";
 
 // =========================================================================
-// TEMPLATE PESAN WHATSAPP (EDIT TEKS DI DALAM TANDA BACKTICK `...` DI SINI)
+// 1. TEMPLATE PESAN WHATSAPP KORONA (EDIT DI DALAM TANDA BACKTICK `...`)
 // =========================================================================
-// Anda juga bisa menyisipkan variabel opsional berikut jika sewaktu-waktu butuh:
-// {petugas}, {lingkungan}, {wilayah}, {tanggal}, {jam}
+// Variabel opsional: {petugas}, {lingkungan}, {wilayah}, {tanggal}, {jam}
 const KORONA_WA_TEMPLATE = `Bapak/Ibu lingk. {lingkungan}, Kami dari Panitia Natal 2026 mau mengingatkan Bapak/ibu  untuk hadir 30 menit lebih awal dari jadwal Misa untuk Perarakan Korona Adven*
 
 *Mohon membawa Korona Lingkungan dan dipastikan lilin dapat tertancap baik ketika dibawa pada perarakan*
 
 Dress code petugas Korona adalah:
 *Batik* (kemeja/blouse, Sopan tertutup tidak ketat ) bawahan warna gelap dan mengenakan sepatu senada.`;
+
+// =========================================================================
+// 2. TEMPLATE PESAN WHATSAPP PENYALA LILIN (EDIT DI DALAM TANDA BACKTICK `...`)
+// =========================================================================
+// Variabel opsional yang bisa disisipkan:
+// {nama}        -> Nama orang yang nomor WA-nya diklik (Suami atau Istri)
+// {pasangan}    -> Nama pasangannya
+// {asalPetugas} -> Asal Wilayah/Kelompok (contoh: Wil. St. Theresia / Seksi...)
+// {event}       -> Minggu Adven (contoh: Adven I)
+// {tanggal}     -> Hari & Tanggal tugas (contoh: Sabtu, 28 Nov 2026)
+// {jam}         -> Jam Misa (contoh: Pk 16.30)
+const LILIN_WA_TEMPLATE = `Bapak/Ibu *{nama}* ({asalPetugas}),
+Kami dari Panitia Natal 2026 Katedral Jakarta ingin mengingatkan jadwal tugas Pasutri *Penyala Lilin {event}* pada:
+
+Hari/Tanggal : *{tanggal}*
+Jam Misa : *{jam} WIB*
+
+Mohon hadir 30 menit sebelum Misa dimulai di area depan sakristi untuk briefing singkat.
+
+Dress code: *Batik* (sopan, tertutup, tidak ketat) dengan bawahan warna gelap dan mengenakan sepatu.
+
+Terima kasih dan Tuhan memberkati.`;
 // =========================================================================
 
 let appData = {
@@ -75,6 +96,17 @@ function buildKoronaWaMessage(data = {}) {
     .replace(/\{petugas\}/g, data.petugas || "")
     .replace(/\{lingkungan\}/g, data.lingkungan || "")
     .replace(/\{wilayah\}/g, data.wilayah || "")
+    .replace(/\{tanggal\}/g, data.tanggal || "")
+    .replace(/\{jam\}/g, data.jam || "");
+}
+
+// Helper: Mengisi template pesan WA Penyala Lilin
+function buildLilinWaMessage(data = {}) {
+  return LILIN_WA_TEMPLATE
+    .replace(/\{nama\}/g, data.nama || "")
+    .replace(/\{pasangan\}/g, data.pasangan || "")
+    .replace(/\{asalPetugas\}/g, data.asalPetugas || "")
+    .replace(/\{event\}/g, data.event || "")
     .replace(/\{tanggal\}/g, data.tanggal || "")
     .replace(/\{jam\}/g, data.jam || "");
 }
@@ -444,17 +476,38 @@ function openLilinModal(info) {
   const modalTitle = document.getElementById("modalTitle");
   const modalBody = document.getElementById("modalBody");
 
-  modalBadge.textContent = `Minggu ${info.eventName} • ${info.hari} ${info.tanggalDisplay} • Pk ${info.jam.replace(":", ".")}`;
+  const formattedTanggal = `${info.hari} ${info.tanggalDisplay}`.trim();
+  const formattedJam = `Pk ${info.jam.replace(":", ".")}`;
+
+  modalBadge.textContent = `Minggu ${info.eventName} • ${formattedTanggal} • ${formattedJam}`;
   modalTitle.textContent = `Petugas: ${info.asalPetugas}`;
 
   modalBody.innerHTML = info.couples
     .map((c, idx) => {
+      const suamiWaMsg = buildLilinWaMessage({
+        nama: c.namaSuami,
+        pasangan: c.namaIstri,
+        asalPetugas: info.asalPetugas,
+        event: info.eventName,
+        tanggal: formattedTanggal,
+        jam: formattedJam
+      });
+
+      const istriWaMsg = buildLilinWaMessage({
+        nama: c.namaIstri,
+        pasangan: c.namaSuami,
+        asalPetugas: info.asalPetugas,
+        event: info.eventName,
+        tanggal: formattedTanggal,
+        jam: formattedJam
+      });
+
       const suamiPhoneHtml = c.noSuami
-        ? `<a class="phone-link" href="${formatWaHref(c.noSuami)}" target="_blank" rel="noopener">📞 ${c.noSuami}</a>`
+        ? `<a class="phone-link" href="${formatWaHref(c.noSuami, suamiWaMsg)}" target="_blank" rel="noopener">📞 ${c.noSuami}</a>`
         : `<span class="phone-empty">No. HP kosong</span>`;
 
       const istriPhoneHtml = c.noIstri
-        ? `<a class="phone-link" href="${formatWaHref(c.noIstri)}" target="_blank" rel="noopener">📞 ${c.noIstri}</a>`
+        ? `<a class="phone-link" href="${formatWaHref(c.noIstri, istriWaMsg)}" target="_blank" rel="noopener">📞 ${c.noIstri}</a>`
         : `<span class="phone-empty">No. HP kosong</span>`;
 
       return `
