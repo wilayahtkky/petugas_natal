@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const countElement = document.getElementById("visitor-count");
     
     // Namespace unik untuk halaman PIC Adven
-    const namespace = "tkky-pic-adven-2026";
+    const namespace = "kumpulan-tkky-pic-adven-2026";
     const key = "kunjungan";
 
     fetch(`https://api.counterapi.dev/v1/${namespace}/${key}/up`)
