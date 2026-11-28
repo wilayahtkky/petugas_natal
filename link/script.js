@@ -1,21 +1,35 @@
 document.addEventListener("DOMContentLoaded", () => {
     const countElement = document.getElementById("visitor-count");
-    
-    // Namespace unik untuk halaman PIC Adven
+    const hostname = window.location.hostname;
+
+    // Deteksi environment: abaikan hitungan jika dibuka secara lokal (testing)
+    const isProduction =
+        hostname !== "localhost" &&
+        hostname !== "127.0.0.1" &&
+        window.location.protocol !== "file:";
+
+    if (!isProduction) {
+        countElement.textContent = "0 (Mode Uji Coba)";
+        return;
+    }
+
+    // Namespace dan key untuk fase production
     const namespace = "kumpulan-tkky-pic-adven-2026";
     const key = "kunjungan";
 
-    fetch(`https://api.counterapi.dev/v1/${namespace}/${key}/up`)
+    // Menggunakan endpoint CounterAPI v2
+    fetch(`https://api.counterapi.dev/v2/${namespace}/${key}/up`)
         .then(response => {
             if (!response.ok) throw new Error("Gagal mengambil data counter");
             return response.json();
         })
-        .then(data => {
-            // Format angka dengan pemisah ribuan (contoh: 1.250)
-            countElement.textContent = data.count.toLocaleString("id-ID");
+        .then(result => {
+            // Mengambil jumlah kunjungan dari struktur respons v2
+            const total = result.data?.up_count ?? result.data?.count ?? result.count ?? 1;
+            countElement.textContent = total.toLocaleString("id-ID");
         })
         .catch(() => {
-            // Fallback ke localStorage jika koneksi API terganggu
+            // Fallback ke penyimpanan lokal browser jika API sedang tidak bisa dijangkau
             let localCount = parseInt(localStorage.getItem("adven_visitor_count") || "0", 10);
             localCount += 1;
             localStorage.setItem("adven_visitor_count", localCount);
