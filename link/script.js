@@ -13,20 +13,18 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    // Namespace dan key untuk fase production
+    // Namespace dan key unik untuk fase production
     const namespace = "kumpulan-tkky-pic-adven-2026";
     const key = "kunjungan";
 
-    // Menggunakan endpoint CounterAPI v2
-    fetch(`https://api.counterapi.dev/v2/${namespace}/${key}/up`)
+    // Menggunakan Abacus API (tanpa perlu daftar akun/workspace)
+    fetch(`https://abacus.jasoncameron.dev/hit/${namespace}/${key}`)
         .then(response => {
             if (!response.ok) throw new Error("Gagal mengambil data counter");
             return response.json();
         })
-        .then(result => {
-            // Mengambil jumlah kunjungan dari struktur respons v2
-            const total = result.data?.up_count ?? result.data?.count ?? result.count ?? 1;
-            countElement.textContent = total.toLocaleString("id-ID");
+        .then(data => {
+            countElement.textContent = data.value.toLocaleString("id-ID");
         })
         .catch(() => {
             // Fallback ke penyimpanan lokal browser jika API sedang tidak bisa dijangkau
